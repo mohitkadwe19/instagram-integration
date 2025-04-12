@@ -3,7 +3,7 @@ export default function handler(req, res) {
     const clientId = process.env.INSTAGRAM_CLIENT_ID;
     
     // Base URL from environment or fallback to request
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+    const baseUrl = process.env.NEXTAUTH_URL || 
                    (req.headers.host?.includes('localhost') 
                      ? `http://${req.headers.host}`
                      : `https://${req.headers.host}`);

@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { accessToken } = session.user;
+    // const { accessToken } = session.user;
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
     // Post a reply to a specific comment
     const response = await fetch(
@@ -37,6 +38,8 @@ export default async function handler(req, res) {
         }),
       }
     );
+
+    console.error("Response status:", response);
 
     if (!response.ok) {
       throw new Error(`Instagram API error: ${response.statusText}`);

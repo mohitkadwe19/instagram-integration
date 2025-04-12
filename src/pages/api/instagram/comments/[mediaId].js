@@ -14,22 +14,27 @@ export default async function handler(req, res) {
   }
 
   // Extract session data from cookie
-  const { instagram_session } = req.cookies;
+  // const { instagram_session } = req.cookies;
   
-  if (!instagram_session) {
-    return res.status(401).json({ error: 'Unauthorized - No session found' });
-  }
+  // if (!instagram_session) {
+  //   return res.status(401).json({ error: 'Unauthorized - No session found' });
+  // }
   
-  // Parse session data
-  const sessionData = JSON.parse(instagram_session);
-  const { accessToken } = sessionData;
+  // // Parse session data
+  // const sessionData = JSON.parse(instagram_session);
+  // const { accessToken } = sessionData;
   
-  if (!accessToken) {
-    return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-  }
+  // if (!accessToken) {
+  //   return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
+  // }
+
+  const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
   // Get media ID from the URL
   const { mediaId } = req.query;
+
+  console.log('Media ID:', mediaId);
+  
   
   if (!mediaId) {
     return res.status(400).json({ error: 'Media ID is required' });
@@ -61,6 +66,8 @@ export default async function handler(req, res) {
       }
       
       const commentsData = await commentsResponse.json();
+
+      console.log('Fetched comments data:', commentsData);
       
       // Return the comments data
       return res.status(200).json(commentsData);

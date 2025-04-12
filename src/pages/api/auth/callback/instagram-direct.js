@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       console.log("Received Instagram code, exchanging for token");
       
       // Base URL from environment or request
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+      const baseUrl = process.env.NEXTAUTH_URL || 
                      (req.headers.host?.includes('localhost') 
                        ? `http://${req.headers.host}`
                        : `https://${req.headers.host}`);

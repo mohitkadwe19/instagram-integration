@@ -11,13 +11,13 @@ const setupGlobalErrorHandling = () => {
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
     // For ngrok development: convert localhost URLs to ngrok URLs
-    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_BASE_URL) {
+    if (process.env.NODE_ENV === 'development' && process.env.NEXTAUTH_URL) {
       // If the request is to localhost and we have a ngrok URL
       if (typeof args[0] === 'string' && args[0].includes('localhost:3000')) {
         // Replace localhost with ngrok URL
         args[0] = args[0].replace(
           'http://localhost:3000', 
-          process.env.NEXT_PUBLIC_BASE_URL
+          process.env.NEXTAUTH_URL
         );
         console.log('Redirecting fetch to:', args[0]);
       }
