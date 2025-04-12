@@ -54,7 +54,7 @@ export default async function auth(req, res) {
         
               // Step 3: Fetch Instagram profile data
               const igProfileRes = await fetch(`https://graph.facebook.com/v18.0/${igId}?fields=id,username,account_type,media_count&access_token=${accessToken}`);
-              const igProfile = await igProfileRes.json();
+              const igProfile = await igProfileRes.json(); 
         
               return {
                 id: igProfile.id,
@@ -121,7 +121,7 @@ export default async function auth(req, res) {
           httpOnly: true,
           sameSite: "lax",
           path: "/",
-          secure: process.env.NODE_ENV === "production",
+          secure: true
         },
       },
       callbackUrl: {
@@ -146,9 +146,9 @@ export default async function auth(req, res) {
         name: `next-auth.pkce.code_verifier`,
         options: {
           httpOnly: true,
-          sameSite: "lax",
+          sameSite: "none", 
           path: "/",
-          secure: process.env.NODE_ENV === "production",
+          secure: true,
           maxAge: 900,
         },
       },
@@ -156,9 +156,9 @@ export default async function auth(req, res) {
         name: `next-auth.state`,
         options: {
           httpOnly: true,
-          sameSite: "none", // Critical for cross-site cookies when using ngrok
+          sameSite: "none",
           path: "/",
-          secure: true, // Always use secure for cross-site
+          secure: true,
           maxAge: 900,
         },
       },
