@@ -21,8 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // const { accessToken } = session.user;
-    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+    const { accessToken } = session.user;
 
     // Post a reply to a specific comment
     const response = await fetch(

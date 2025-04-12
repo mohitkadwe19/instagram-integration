@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import InstagramProvider from "next-auth/providers/instagram";
 
 export default async function auth(req, res) {
   // Check if this is a webhook verification request
@@ -15,10 +16,9 @@ export default async function auth(req, res) {
   // Regular NextAuth flow
   return await NextAuth(req, res, {
     providers: [
-      {
-        id: "instagram",
-        name: "Instagram",
-        type: "oauth",
+      InstagramProvider({
+        clientId: process.env.INSTAGRAM_CLIENT_ID,
+        clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
         authorization: {
           url: "https://api.instagram.com/oauth/authorize",
           params: {
@@ -80,8 +80,6 @@ export default async function auth(req, res) {
             }
           },
         },
-        clientId: process.env.INSTAGRAM_CLIENT_ID,
-        clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
         profile(profile) {
           return {
             id: profile.id,
@@ -90,7 +88,7 @@ export default async function auth(req, res) {
             image: null,
           };
         },
-      },
+      }),
     ],
     callbacks: {
       async jwt({ token, user, account }) {

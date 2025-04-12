@@ -14,26 +14,40 @@ export default async function handler(req, res) {
   }
 
   // Extract session data from cookie
-  // const { instagram_session } = req.cookies;
+  const { instagram_session } = req.cookies;
   
-  // if (!instagram_session) {
-  //   return res.status(401).json({ error: 'Unauthorized - No session found' });
-  // }
+  if (!instagram_session) {
+    // If no session cookie, check for environment variable as fallback
+    if (process.env.INSTAGRAM_ACCESS_TOKEN) {
+      // Use the environment variable
+      accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+    } else {
+      return res.status(401).json({ error: 'Unauthorized - No session found' });
+    }
+  } else {
+    // Parse session data from cookie
+    try {
+      const sessionData = JSON.parse(instagram_session);
+      accessToken = sessionData.accessToken;
+      
+      if (!accessToken) {
+        return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
+      }
+    } catch (err) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid session format' });
+    }
+  }  
   
-  // // Parse session data
-  // const sessionData = JSON.parse(instagram_session);
-  // const { accessToken } = sessionData;
+  // Parse session data
+  const sessionData = JSON.parse(instagram_session);
+  const { accessToken } = sessionData;
   
-  // if (!accessToken) {
-  //   return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-  // }
-
-  const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
+  }
 
   // Get media ID from the URL
   const { mediaId } = req.query;
-
-  console.log('Media ID:', mediaId);
   
   
   if (!mediaId) {
