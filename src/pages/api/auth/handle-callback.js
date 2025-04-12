@@ -46,16 +46,18 @@ export default async function handler(req, res) {
       return res.redirect(`/auth/error?error=${encodeURIComponent(tokenData.error_message || 'token_exchange_failed')}`);
     }
 
-    // Get the long-lived token
-    const longLivedTokenResponse = await fetch(`https://graph.facebook.com/v19.0/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${tokenData.access_token}`);
+    // Get the long-lived token (valid for 60 days)
+    const longLivedTokenResponse = await fetch(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${tokenData.access_token}`);
     const longLivedTokenData = await longLivedTokenResponse.json();
     console.log('Long-lived token response:', longLivedTokenData);
 
     const accessToken = longLivedTokenData.access_token || tokenData.access_token;
     const userId = tokenData.user_id;
 
-    // Get the user profile using the token
-    const userResponse = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,username,account_type,media_count&access_token=${accessToken}`);
+    // Get extensive user profile data using business fields
+    const userResponse = await fetch(
+      `https://graph.instagram.com/me?fields=id,username,account_type,media_count,profile_picture_url,biography,website,followers_count,follows_count,name&access_token=${accessToken}`
+    );
     const userData = await userResponse.json();
     console.log('User profile data:', userData);
 
@@ -68,17 +70,24 @@ export default async function handler(req, res) {
     const sessionData = {
       accessToken: accessToken,
       userId: userId,
-      username: userData.username || 'instagramuser',
+      username: userData.username,
       id: userData.id,
       accountType: userData.account_type,
       mediaCount: userData.media_count,
+      profilePictureUrl: userData.profile_picture_url,
+      biography: userData.biography,
+      website: userData.website,
+      followersCount: userData.followers_count,
+      followsCount: userData.follows_count,
+      name: userData.name,
+      tokenExpires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
     };
     
     // Store in a cookie
-    res.setHeader('Set-Cookie', `instagram_session=${JSON.stringify(sessionData)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
+    res.setHeader('Set-Cookie', `instagram_session=${JSON.stringify(sessionData)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=5184000`); // 60 days
     
     // Redirect to success page
-    return res.redirect(`/auth/success?username=${encodeURIComponent(userData.username || 'instagramuser')}`);
+    return res.redirect(`/auth/success?username=${encodeURIComponent(userData.username)}`);
   } catch (error) {
     console.error('Error handling callback:', error);
     return res.redirect(`/auth/error?error=${encodeURIComponent('internal_server_error')}`);
