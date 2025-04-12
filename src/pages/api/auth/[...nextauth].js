@@ -32,13 +32,17 @@ export default async function auth(req, res) {
           async request({ client, tokens }) {
             try {
               console.log("Fetching user info with token:", tokens.access_token);
+              console.log("client:", client);
               
               const accessToken = tokens.access_token;
 
               const pageRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
               const pageData = await pageRes.json();
+
+              console.log("Page data:", pageData);
         
               const page = pageData?.data?.[0];
+              console.log("Facebook Page:", page);
               if (!page) {
                 console.error("No Facebook Page found");
                 throw new Error("No connected Facebook Page");
@@ -47,8 +51,11 @@ export default async function auth(req, res) {
               // Step 2: Get Instagram Business Account ID
               const igAccountRes = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${accessToken}`);
               const igAccountData = await igAccountRes.json();
+
+              console.log("Instagram account data:", igAccountData);
         
               const igId = igAccountData?.instagram_business_account?.id;
+              console.log("Instagram ID:", igId);
               if (!igId) {
                 console.error("Instagram Business account not found");
                 throw new Error("Page not linked to an Instagram Business account");
@@ -58,6 +65,8 @@ export default async function auth(req, res) {
               const igProfileRes = await fetch(`https://graph.facebook.com/v18.0/${igId}?fields=id,username,account_type,media_count&access_token=${accessToken}`);
               const igProfile = await igProfileRes.json(); 
         
+              console.log("Instagram profile data:", igProfile);
+
               return {
                 id: igProfile.id,
                 username: igProfile.username,
