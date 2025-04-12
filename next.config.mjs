@@ -15,9 +15,6 @@ const nextConfig = {
     ],
   },
   allowedDevOrigins: ['*.ngrok-free.app', '*.vercel.app'],
-  experimental: {
-    serverComponentsExternalPackages: ['next-auth'],
-  },
 };
 
 export default nextConfig;
