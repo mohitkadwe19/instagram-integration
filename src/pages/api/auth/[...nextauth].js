@@ -1,30 +1,6 @@
 import NextAuth from "next-auth";
 
-// Special handler for Instagram webhook verification
-export const config = {
-  api: {
-    bodyParser: false,
-    externalResolver: true, // This tells Next.js that this route is handled by an external resolver
-  },
-};
-
-// Custom handler to deal with both authentication and webhook verification
 export default async function auth(req, res) {
-  // Add CORS headers for ngrok
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  // Handle OPTIONS method for preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
   // Check if this is a webhook verification request
   if (
     req.method === "GET" &&
@@ -44,13 +20,13 @@ export default async function auth(req, res) {
         name: "Instagram",
         type: "oauth",
         authorization: {
-          url: "https://www.facebook.com/v19.0/dialog/oauth",
+          url: "https://api.instagram.com/oauth/authorize",
           params: {
             scope: "user_profile,user_media",
             response_type: "code",
           },
         },
-        token: "https://graph.facebook.com/v19.0/oauth/access_token",
+        token: "https://api.instagram.com/oauth/access_token",
         userinfo: {
           url: `${process.env.INSTAGRAM_API_URL}/me`,
           async request({ client, tokens }) {
@@ -118,8 +94,6 @@ export default async function auth(req, res) {
     ],
     callbacks: {
       async jwt({ token, user, account }) {
-        console.log("JWT callback - user:", user);
-        console.log("JWT callback - account:", account);
         // Initial sign in
         if (account && user) {
           return {
@@ -135,7 +109,6 @@ export default async function auth(req, res) {
         return token;
       },
       async session({ session, token }) {
-        console.log("Session callback - token:", token);
         session.user = {
           ...session.user,
           username: token.username || session.user.name,
@@ -146,34 +119,15 @@ export default async function auth(req, res) {
         };
         return session;
       },
-      async redirect({ url, baseUrl }) {
-        // Use the NEXT_PUBLIC_BASE_URL if available, otherwise use the baseUrl
-        const effectiveBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || baseUrl;
-        
-        // Allow redirects to the same host
-        if (url.startsWith(effectiveBaseUrl)) {
-          return url;
-        }
-        
-        // Check if the URL is a relative URL
-        if (url.startsWith("/")) {
-          return `${effectiveBaseUrl}${url}`;
-        }
-        
-        // Default redirect to base URL
-        return effectiveBaseUrl;
-      },
     },
     pages: {
       signIn: "/auth/signin",
       error: "/auth/error",
     },
-    debug: true, // Enable debug mode
-    secret: process.env.NEXTAUTH_SECRET,
+    // Fix for the cookie issue
     cookies: {
-      // Add more secure cookie settings
-      state: {
-        name: "next-auth.state",
+      sessionToken: {
+        name: `next-auth.session-token`,
         options: {
           httpOnly: true,
           sameSite: "lax",
@@ -181,6 +135,46 @@ export default async function auth(req, res) {
           secure: process.env.NODE_ENV === "production",
         },
       },
+      callbackUrl: {
+        name: `next-auth.callback-url`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+      csrfToken: {
+        name: `next-auth.csrf-token`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+      pkceCodeVerifier: {
+        name: `next-auth.pkce.code_verifier`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 900,
+        },
+      },
+      state: {
+        name: `next-auth.state`,
+        options: {
+          httpOnly: true,
+          sameSite: "none", // Critical for cross-site cookies when using ngrok
+          path: "/",
+          secure: true, // Always use secure for cross-site
+          maxAge: 900,
+        },
+      },
     },
+    debug: true,
+    secret: process.env.NEXTAUTH_SECRET,
   });
 }
