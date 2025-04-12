@@ -15,7 +15,7 @@ export default function handler(req, res) {
     console.log('Redirect URI:', redirectUri);
     console.log('Client ID:', clientId);
     
-    const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user_profile,user_media,instagram_graph_user_profile,instagram_graph_user_media&response_type=code`;
+    const url = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list&response_type=code`;
     
     console.log('Generated Instagram Auth URL:', url);
     
