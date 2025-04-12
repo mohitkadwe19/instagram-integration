@@ -32,48 +32,39 @@ export default async function auth(req, res) {
           async request({ client, tokens }) {
             try {
               console.log("Fetching user info with token:", tokens.access_token);
-              // Get user ID and username
-              const userResponse = await fetch(
-                `${process.env.INSTAGRAM_API_URL}/me?fields=id,username&access_token=${tokens.access_token}`
-              );
               
-              if (!userResponse.ok) {
-                console.error("Instagram API error:", await userResponse.text());
-                throw new Error(`Instagram API error: ${userResponse.statusText}`);
+              const pageRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
+              const pageData = await pageRes.json();
+        
+              const page = pageData?.data?.[0];
+              if (!page) {
+                console.error("No Facebook Page found");
+                throw new Error("No connected Facebook Page");
               }
-              
-              const userData = await userResponse.json();
-              console.log("User data:", userData);
-              
-              // Get more profile details if available
-              try {
-                const profileResponse = await fetch(
-                  `${process.env.INSTAGRAM_API_URL}/${userData.id}?fields=id,username,account_type,media_count&access_token=${tokens.access_token}`
-                );
-                
-                if (profileResponse.ok) {
-                  const profile = await profileResponse.json();
-                  console.log("Profile data:", profile);
-                  return {
-                    id: profile.id,
-                    username: profile.username,
-                    account_type: profile.account_type,
-                    media_count: profile.media_count,
-                    access_token: tokens.access_token,
-                    name: profile.username, // Required for NextAuth
-                  };
-                }
-              } catch (profileError) {
-                console.error("Error fetching detailed profile:", profileError);
+        
+              // Step 2: Get Instagram Business Account ID
+              const igAccountRes = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${accessToken}`);
+              const igAccountData = await igAccountRes.json();
+        
+              const igId = igAccountData?.instagram_business_account?.id;
+              if (!igId) {
+                console.error("Instagram Business account not found");
+                throw new Error("Page not linked to an Instagram Business account");
               }
-              
-              // Fallback to basic user information
+        
+              // Step 3: Fetch Instagram profile data
+              const igProfileRes = await fetch(`https://graph.facebook.com/v18.0/${igId}?fields=id,username,account_type,media_count&access_token=${accessToken}`);
+              const igProfile = await igProfileRes.json();
+        
               return {
-                id: userData.id,
-                username: userData.username,
-                name: userData.username, // Required for NextAuth
-                access_token: tokens.access_token,
+                id: igProfile.id,
+                username: igProfile.username,
+                name: igProfile.username,
+                account_type: igProfile.account_type,
+                media_count: igProfile.media_count,
+                access_token: accessToken,
               };
+        
             } catch (error) {
               console.error("Error in userinfo request:", error);
               throw error;
