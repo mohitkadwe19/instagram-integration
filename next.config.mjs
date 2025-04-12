@@ -15,6 +15,9 @@ const nextConfig = {
     ],
   },
   allowedDevOrigins: ['*.ngrok-free.app', '*.vercel.app'],
+  redirects: [
+    { "source": "http://instagram-integration-three.vercel.app/:path*", "destination": "https://instagram-integration-three.vercel.app/:path*", "permanent": true }
+  ]
 };
 
 export default nextConfig;
