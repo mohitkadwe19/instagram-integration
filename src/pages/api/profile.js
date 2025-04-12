@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { FaInstagram, FaUser, FaMapMarkerAlt, FaGlobe, FaUserFriends, FaImages } from "react-icons/fa";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
