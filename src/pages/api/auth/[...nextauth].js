@@ -54,7 +54,7 @@ export default async function auth(req, res) {
 
               console.log("Instagram account data:", igAccountData);
         
-              const igId = igAccountData?.instagram_business_account?.id;
+              const igId = igAccountData?.id;
               console.log("Instagram ID:", igId);
               if (!igId) {
                 console.error("Instagram Business account not found");
