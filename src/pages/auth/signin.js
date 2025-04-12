@@ -53,7 +53,7 @@ export default function SignIn({ providers: initialProviders }) {
       console.log("Signing in with provider:", providerId);
       
       // Use environment variable for the base URL if available, otherwise use window.location.origin
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+      const baseUrl = process.env.NEXTAUTH_URL || 
                      (typeof window !== 'undefined' ? window.location.origin : '');
                      
       // Set the effective callback URL

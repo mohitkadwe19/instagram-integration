@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     // Get the redirect URI - must match exactly what was used in authorization
-    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/instagram`;
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/callback/instagram`;
 
     // Exchange the code for an access token - using Instagram Basic Display API
     const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
 
     // Get extensive user profile data using business fields
     const userResponse = await fetch(
-      `https://graph.instagram.com/me?fields=id,username,account_type,media_count,profile_picture_url,biography,website,followers_count,follows_count,name&access_token=${accessToken}`
+      `${process.env.INSTAGRAM_API_URL}/me?fields=id,username,account_type,media_count,profile_picture_url,biography,website,followers_count,follows_count,name&access_token=${accessToken}`
     );
     const userData = await userResponse.json();
     console.log('User profile data:', userData);

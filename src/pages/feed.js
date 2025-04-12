@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
-import { FaInstagram, FaHeart, FaComment, FaVideo, FaImage, FaImages, FaSpinner, FaExclamationCircle, FaAngleDown } from "react-icons/fa";
+import { FaHeart, FaComment, FaVideo, FaImage, FaImages, FaSpinner, FaExclamationCircle, FaAngleDown } from "react-icons/fa";
 import Layout from "../components/Layout";
-import MediaModal from "../components/MediaModal"; // We'll create this next
+import MediaModal from "../components/MediaModal";
 
 export default function FeedPage() {
   const [mediaItems, setMediaItems] = useState([]);
@@ -12,7 +11,7 @@ export default function FeedPage() {
   const [paginationCursor, setPaginationCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
-  const [viewMode, setViewMode] = useState("grid"); // grid or list
+  const [viewMode, setViewMode] = useState("grid");
   const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchMedia = async (after = null) => {
@@ -184,7 +183,7 @@ export default function FeedPage() {
                 className="aspect-square rounded-lg overflow-hidden shadow-md relative cursor-pointer transition-transform hover:shadow-lg hover:-translate-y-1"
                 onClick={() => openMediaDetails(media)}
               >
-                <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                <div className="absolute inset-0 bg-opacity-20"></div>
                 {media.media_type === "VIDEO" ? (
                   <div className="w-full h-full bg-black flex items-center justify-center">
                     {media.thumbnail_url ? (

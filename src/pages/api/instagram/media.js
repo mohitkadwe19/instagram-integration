@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       const { after } = req.query;
       
       // Construct URL to fetch media
-      let mediaUrl = `https://graph.instagram.com/${userId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,username,comments_count,like_count,children{id,media_type,media_url,thumbnail_url}&access_token=${accessToken}`;
+      let mediaUrl = `${process.env.INSTAGRAM_API_URL}/${userId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,username,comments_count,like_count,children{id,media_type,media_url,thumbnail_url}&access_token=${accessToken}`;
       
       if (after) {
         mediaUrl += `&after=${after}`;
