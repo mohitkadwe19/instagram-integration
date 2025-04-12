@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaReply, FaUser, FaSpinner, FaTimes, FaExclamationCircle, FaPaperPlane } from "react-icons/fa";
+import { FaReply, FaTimes, FaSpinner, FaExclamationCircle, FaPaperPlane, FaUser } from "react-icons/fa";
 
 export default function CommentSection({ mediaId }) {
-  const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [paginationToken, setPaginationToken] = useState(null);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const commentInputRef = useRef(null);
 
   useEffect(() => {
@@ -19,29 +19,62 @@ export default function CommentSection({ mediaId }) {
     }
   }, [mediaId]);
 
-  // If we're replying to a comment, focus the input
   useEffect(() => {
     if (replyingTo && commentInputRef.current) {
       commentInputRef.current.focus();
     }
   }, [replyingTo]);
 
-  const fetchComments = async () => {
+  const fetchComments = async (after = null) => {
     try {
-      setLoading(true);
-      const response = await fetch(`/api/comments/${mediaId}`);
+      if (after) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      
+      let url = `/api/instagram/comments/${mediaId}`;
+      if (after) {
+        url += `?after=${after}`;
+      }
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error("Failed to fetch comments");
+        throw new Error(`Failed to fetch comments: ${response.statusText}`);
       }
       
       const data = await response.json();
-      setComments(data.data || []);
+      
+      if (data.error) {
+        throw new Error(data.error.message || "Error fetching comments");
+      }
+      
+      if (after) {
+        setComments(prev => [...prev, ...data.data]);
+      } else {
+        setComments(data.data || []);
+      }
+      
+      // Check for pagination
+      if (data.paging && data.paging.cursors && data.paging.cursors.after) {
+        setPaginationToken(data.paging.cursors.after);
+        setHasMoreComments(true);
+      } else {
+        setHasMoreComments(false);
+      }
     } catch (err) {
       console.error("Error fetching comments:", err);
-      setError("Failed to load comments. Please try again later.");
+      setError(err.message || "Failed to load comments. Please try again later.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreComments = () => {
+    if (paginationToken && hasMoreComments && !loadingMore) {
+      fetchComments(paginationToken);
     }
   };
 
@@ -53,16 +86,16 @@ export default function CommentSection({ mediaId }) {
     try {
       setSubmitting(true);
       
-      let url = `/api/comments/${mediaId}`;
-      let payload = { text: commentText };
+      const payload = {
+        text: commentText,
+      };
       
       // If replying to a comment
       if (replyingTo) {
-        url = `/api/comments/${mediaId}/reply`;
-        payload = { ...payload, commentId: replyingTo.id };
+        payload.replied_to_comment_id = replyingTo.id;
       }
       
-      const response = await fetch(url, {
+      const response = await fetch(`/api/instagram/comments/${mediaId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +104,8 @@ export default function CommentSection({ mediaId }) {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to post comment");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to post comment");
       }
       
       // Refresh comments
@@ -80,7 +114,7 @@ export default function CommentSection({ mediaId }) {
       setReplyingTo(null);
     } catch (err) {
       console.error("Error posting comment:", err);
-      setError("Failed to post comment. Please try again later.");
+      setError(err.message || "Failed to post comment. Please try again later.");
     } finally {
       setSubmitting(false);
     }
@@ -94,11 +128,6 @@ export default function CommentSection({ mediaId }) {
     });
   };
 
-  const commentVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">
       <div className="flex-grow overflow-y-auto p-4">
@@ -106,11 +135,8 @@ export default function CommentSection({ mediaId }) {
         
         {loading && comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="loading-spinner">
-              <div></div><div></div><div></div><div></div><div></div><div></div>
-              <div></div><div></div><div></div><div></div><div></div><div></div>
-            </div>
-            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading comments...</p>
+            <FaSpinner className="animate-spin h-8 w-8 text-purple-500 mb-4" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading comments...</p>
           </div>
         ) : error ? (
           <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-4 mb-4">
@@ -121,7 +147,7 @@ export default function CommentSection({ mediaId }) {
               <div className="ml-3">
                 <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                 <button 
-                  onClick={fetchComments} 
+                  onClick={() => fetchComments()} 
                   className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
                 >
                   Try again
@@ -137,101 +163,85 @@ export default function CommentSection({ mediaId }) {
               </svg>
             </div>
             <p className="text-gray-500 dark:text-gray-400">No comments yet</p>
-            {session && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Be the first to comment on this post</p>
-            )}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Be the first to comment on this post</p>
           </div>
         ) : (
-          <AnimatePresence>
-            <motion.div 
-              className="space-y-4"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.07
-                  }
-                }
-              }}
-            >
-              {comments.map((comment) => (
-                <motion.div 
-                  key={comment.id} 
-                  className="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3"
-                  variants={commentVariants}
-                >
-                  <div className="flex">
-                    <div className="flex-shrink-0 mr-3">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white overflow-hidden">
-                        {comment.user?.profile_picture_url ? (
-                          <img 
-                            src={comment.user.profile_picture_url}
-                            alt={comment.username}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <FaUser className="text-white" />
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">@{comment.username}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(comment.timestamp)}</div>
-                        </div>
-                        <button
-                          onClick={() => setReplyingTo(comment)}
-                          className="inline-flex items-center text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
-                        >
-                          <FaReply className="mr-1" />
-                          Reply
-                        </button>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                        {comment.text}
-                      </div>
-                      
-                      {/* Replies */}
-                      {comment.replies && comment.replies.data && comment.replies.data.length > 0 && (
-                        <div className="mt-3 ml-3 pl-3 border-l-2 border-gray-200 dark:border-gray-600 space-y-2">
-                          {comment.replies.data.map((reply) => (
-                            <div key={reply.id} className="flex">
-                              <div className="flex-shrink-0 mr-2">
-                                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white overflow-hidden">
-                                  {reply.user?.profile_picture_url ? (
-                                    <img 
-                                      src={reply.user.profile_picture_url}
-                                      alt={reply.username}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <FaUser className="text-white text-xs" />
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <div className="text-xs font-medium text-gray-900 dark:text-gray-100">@{reply.username}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(reply.timestamp)}</div>
-                                  </div>
-                                </div>
-                                <div className="mt-1 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                                  {reply.text}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
+                <div className="flex">
+                  <div className="flex-shrink-0 mr-3">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white overflow-hidden">
+                      <FaUser className="text-white" />
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">@{comment.username}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(comment.timestamp)}</div>
+                      </div>
+                      <button
+                        onClick={() => setReplyingTo(comment)}
+                        className="inline-flex items-center text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                      >
+                        <FaReply className="mr-1" />
+                        Reply
+                      </button>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                      {comment.text}
+                    </div>
+                    
+                    {/* Replies */}
+                    {comment.replies && comment.replies.data && comment.replies.data.length > 0 && (
+                      <div className="mt-3 ml-3 pl-3 border-l-2 border-gray-200 dark:border-gray-600 space-y-2">
+                        {comment.replies.data.map((reply) => (
+                          <div key={reply.id} className="flex">
+                            <div className="flex-shrink-0 mr-2">
+                              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white overflow-hidden">
+                                <FaUser className="text-white text-xs" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="text-xs font-medium text-gray-900 dark:text-gray-100">@{reply.username}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(reply.timestamp)}</div>
+                                </div>
+                              </div>
+                              <div className="mt-1 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                                {reply.text}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {hasMoreComments && (
+              <div className="text-center">
+                <button
+                  onClick={loadMoreComments}
+                  disabled={loadingMore}
+                  className="px-4 py-2 text-sm text-purple-600 hover:text-purple-800 transition-colors"
+                >
+                  {loadingMore ? (
+                    <span className="flex items-center">
+                      <FaSpinner className="animate-spin mr-2" />
+                      Loading more comments...
+                    </span>
+                  ) : (
+                    "Load more comments"
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
       
@@ -260,13 +270,13 @@ export default function CommentSection({ mediaId }) {
               onChange={(e) => setCommentText(e.target.value)}
               placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
-              disabled={loading || !session || submitting}
+              disabled={loading || submitting}
             />
           </div>
           <button
             type="submit"
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-r-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 flex items-center justify-center"
-            disabled={loading || !commentText.trim() || !session || submitting}
+            disabled={loading || !commentText.trim() || submitting}
           >
             {submitting ? (
               <FaSpinner className="animate-spin h-4 w-4" />
@@ -275,12 +285,6 @@ export default function CommentSection({ mediaId }) {
             )}
           </button>
         </form>
-        
-        {!session && (
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            You need to be signed in to comment
-          </p>
-        )}
       </div>
     </div>
   );
