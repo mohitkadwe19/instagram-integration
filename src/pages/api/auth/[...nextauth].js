@@ -33,6 +33,8 @@ export default async function auth(req, res) {
             try {
               console.log("Fetching user info with token:", tokens.access_token);
               
+              const accessToken = tokens.access_token;
+
               const pageRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
               const pageData = await pageRes.json();
         
