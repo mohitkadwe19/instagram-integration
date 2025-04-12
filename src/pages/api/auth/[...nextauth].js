@@ -20,13 +20,13 @@ export default async function auth(req, res) {
         clientId: process.env.INSTAGRAM_CLIENT_ID,
         clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
         authorization: {
-          url: "https://api.instagram.com/oauth/authorize",
+          url: "https://www.facebook.com/v18.0/dialog/oauth",
           params: {
-            scope: "user_profile,user_media",
+            scope: "instagram_basic,pages_show_list",
             response_type: "code",
           },
         },
-        token: "https://api.instagram.com/oauth/access_token",
+        token: "https://graph.facebook.com/v18.0/oauth/access_token",
         userinfo: {
           url: `${process.env.INSTAGRAM_API_URL}/me`,
           async request({ client, tokens }) {

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/callback/instagram`;
 
     // Exchange the code for an access token - using Instagram Basic Display API
-    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+    const tokenResponse = await fetch('https://www.facebook.com/v18.0/oauth/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     }
 
     // Get the long-lived token (valid for 60 days)
-    const longLivedTokenResponse = await fetch(`https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${tokenData.access_token}`);
+    const longLivedTokenResponse = await fetch(`https://graph.facebook.com/v18.0/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${tokenData.access_token}`);
     const longLivedTokenData = await longLivedTokenResponse.json();
     console.log('Long-lived token response:', longLivedTokenData);
 
