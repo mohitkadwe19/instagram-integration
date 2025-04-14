@@ -9,6 +9,9 @@ export default async function handler(req, res) {
 
   const session = await getSession({ req });
 
+  console.log("Session:", session);
+  console.log("Request body:", req.body);
+
   if (!session) {
     return res.status(401).json({ error: "You must be signed in to access this endpoint" });
   }
