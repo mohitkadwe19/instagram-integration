@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     // Fetch more detailed profile information
     const response = await fetch(
-      `${process.env.INSTAGRAM_API_URL}/${userId}?fields=id,username,profile_picture_url,account_type,media_count&access_token=${accessToken}`
+      `${process.env.INSTAGRAM_API_URL}/${userId}?fields=id,username,followers_count,follows_count,profile_picture_url,account_type,media_count&access_token=${accessToken}`
     );
 
     if (!response.ok) {
