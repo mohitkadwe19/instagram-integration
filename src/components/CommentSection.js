@@ -36,7 +36,7 @@ export default function CommentSection({ mediaId }) {
         setLoading(true);
       }
       
-      let url = `/api/instagram/fetchComments/${mediaId}`;
+      let url = `/api/instagram/comments/${mediaId}`;
       if (after) {
         url += `?after=${after}`;
       }

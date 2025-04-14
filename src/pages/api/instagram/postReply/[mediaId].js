@@ -1,18 +1,18 @@
-import { getToken } from "next-auth/jwt";
+import { getSession } from "next-auth/react";
 
 export default async function handler(req, res) {
-  // Only allow POST requests
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+  const session = await getSession({ req });
+
+  if (!session) {
+    return res.status(401).json({ error: "You must be signed in to access this endpoint" });
   }
 
   try {
-    // Get the token from the request
-    const token = await getToken({ req });
+
+    const { accessToken, userId } = session.user;
     
-    if (!token) {
-      console.log("No token found for posting reply");
+    if (!accessToken) {
+      console.log("No access token found for posting reply");
       return res.status(401).json({ error: "You must be signed in to access this endpoint" });
     }
     
@@ -27,8 +27,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Reply text is required" });
     }
     
-    const accessToken = token.accessToken;
-    
     if (!accessToken) {
       console.error("No access token found in token");
       return res.status(401).json({ error: "Instagram access token not available" });
@@ -38,11 +36,7 @@ export default async function handler(req, res) {
     
     // Base URL for posting a comment to the media
     let url = `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?access_token=${accessToken}`;
-    
-    // If a comment ID is provided, we're replying to a specific comment
-    // Note: Instagram Graph API doesn't directly support replying to comments
-    // Instead, it treats all comments as top-level, but we can include a mention
-    // of the original commenter in the reply
+
     
     const response = await fetch(
       url,
@@ -51,7 +45,7 @@ export default async function handler(req, res) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, additionalParam: "value" }),
       }
     );
     
