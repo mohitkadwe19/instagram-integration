@@ -3,7 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { FaInstagram, FaSignOutAlt, FaUser, FaChevronDown } from "react-icons/fa";
+import { FaInstagram, FaSignOutAlt, FaUser, FaChevronDown, FaImages } from "react-icons/fa";
 
 export default function Layout({ children, title = "Instagram Integration App" }) {
   const { data: session } = useSession();
@@ -54,6 +54,20 @@ export default function Layout({ children, title = "Instagram Integration App" }
                   Instagram Integration
                 </span>
               </Link>
+              
+              {/* Navigation Links - Only show when logged in */}
+              {session && (
+                <div className="hidden md:flex ml-8 space-x-4">
+                  <Link href="/profile" className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                    <FaUser className="mr-1.5 h-4 w-4 text-purple-500" />
+                    <span>Profile</span>
+                  </Link>
+                  <Link href="/feed" className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                    <FaImages className="mr-1.5 h-4 w-4 text-pink-500" />
+                    <span>Feed</span>
+                  </Link>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-4">              
@@ -90,13 +104,26 @@ export default function Layout({ children, title = "Instagram Integration App" }
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
                       >
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          View Profile
+                        </Link>
+                        <Link
+                          href="/feed"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Media Feed
+                        </Link>
+                        <div className="border-t border-gray-100 my-1"></div>
                         <a
                           href={`https://instagram.com/${session.user.username || session.user.name}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          View Instagram Profile
+                          Instagram Profile
                         </a>
                         <button
                           onClick={handleSignOut}
@@ -200,24 +227,40 @@ export default function Layout({ children, title = "Instagram Integration App" }
                     </div>
                   </div>
                   
+                  {/* Mobile Navigation Links */}
+                  <Link
+                    href="/profile"
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    <FaUser className="mr-2 text-purple-500" />
+                    View Profile
+                  </Link>
+                  
+                  <Link
+                    href="/feed"
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    <FaImages className="mr-2 text-pink-500" />
+                    Media Feed
+                  </Link>
+                  
                   <a
                     href={`https://instagram.com/${session.user.username || session.user.name}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
                   >
-                    View Instagram Profile
+                    <FaInstagram className="mr-2 text-gray-500" />
+                    Instagram Profile
                   </a>
                   
                   <button
                     onClick={handleSignOut}
                     disabled={isLoggingOut}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
                   >
-                    <div className="flex items-center">
-                      <FaSignOutAlt className="mr-2 text-gray-500" />
-                      {isLoggingOut ? "Signing out..." : "Sign out"}
-                    </div>
+                    <FaSignOutAlt className="mr-2 text-gray-500" />
+                    {isLoggingOut ? "Signing out..." : "Sign out"}
                   </button>
                 </>
               ) : (
