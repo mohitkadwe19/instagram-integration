@@ -14,21 +14,38 @@ export default function AuthSuccess() {
     if (!username) return;
 
     // Get the full user data from cookies
-    const getProfileData = () => {
+    const getProfileData = async () => {
       try {
-        // Get the Instagram session from cookies
-        const cookies = document.cookie.split(';');
-        const instagramCookie = cookies.find(c => c.trim().startsWith('instagram_session='));
-        
-        if (instagramCookie) {
-          const cookieValue = instagramCookie.split('=')[1];
-          if (cookieValue) {
-            const sessionData = JSON.parse(decodeURIComponent(cookieValue));
-            setUserData(sessionData);
+        setLoading(true);
+
+        // Try to get profile from our API first
+        const response = await fetch("/api/profile");
+
+        if (response.ok) {
+          const apiData = await response.json();
+          setUserData(apiData);
+        } else {
+          // Fallback to cookies if API fails
+          const cookies = document.cookie.split(";");
+          const instagramCookie = cookies.find((c) =>
+            c.trim().startsWith("instagram_session=")
+          );
+
+          if (instagramCookie) {
+            const cookieValue = instagramCookie.split("=")[1];
+            if (cookieValue) {
+              const sessionData = JSON.parse(decodeURIComponent(cookieValue));
+              setUserData(sessionData);
+            } else {
+              setError("No profile data found in session cookie");
+            }
+          } else {
+            setError("No Instagram session found. Please log in.");
           }
         }
       } catch (error) {
-        console.error('Error parsing Instagram session:', error);
+        console.error("Error fetching profile data:", error);
+        setError("Could not load profile data. Please try logging in again.");
       } finally {
         setLoading(false);
       }
