@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FaInstagram, FaUser, FaMapMarkerAlt, FaGlobe, FaUserFriends, FaImages } from "react-icons/fa";
+import {
+  FaInstagram,
+  FaUser,
+  FaMapMarkerAlt,
+  FaGlobe,
+  FaUserFriends,
+  FaImages,
+} from "react-icons/fa";
 import Layout from "../components/Layout";
 
 export default function ProfilePage() {
@@ -8,31 +15,46 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Update the useEffect in your ProfilePage component
   useEffect(() => {
-    const getProfileData = () => {
+    const fetchProfileData = async () => {
       try {
-        // Get the Instagram session from cookies
-        const cookies = document.cookie.split(';');
-        const instagramCookie = cookies.find(c => c.trim().startsWith('instagram_session='));
-        
-        if (instagramCookie) {
-          const cookieValue = instagramCookie.split('=')[1];
-          if (cookieValue) {
-            const sessionData = JSON.parse(decodeURIComponent(cookieValue));
-            setProfileData(sessionData);
-          }
+        setLoading(true);
+
+        // Try to get profile from our API first
+        const response = await fetch("/api/instagram/profile");
+
+        if (response.ok) {
+          const apiData = await response.json();
+          setProfileData(apiData);
         } else {
-          setError("No Instagram session found. Please log in.");
+          // Fallback to cookies if API fails
+          const cookies = document.cookie.split(";");
+          const instagramCookie = cookies.find((c) =>
+            c.trim().startsWith("instagram_session=")
+          );
+
+          if (instagramCookie) {
+            const cookieValue = instagramCookie.split("=")[1];
+            if (cookieValue) {
+              const sessionData = JSON.parse(decodeURIComponent(cookieValue));
+              setProfileData(sessionData);
+            } else {
+              setError("No profile data found in session cookie");
+            }
+          } else {
+            setError("No Instagram session found. Please log in.");
+          }
         }
       } catch (error) {
-        console.error('Error parsing Instagram session:', error);
+        console.error("Error fetching profile data:", error);
         setError("Could not load profile data. Please try logging in again.");
       } finally {
         setLoading(false);
       }
     };
 
-    getProfileData();
+    fetchProfileData();
   }, []);
 
   if (loading) {
@@ -54,7 +76,9 @@ export default function ProfilePage() {
       <Layout title="Profile Error">
         <div className="min-h-[60vh] flex flex-col items-center justify-center">
           <div className="bg-red-50 p-4 rounded-lg text-center max-w-md">
-            <h2 className="text-lg font-semibold text-red-700 mb-2">Error Loading Profile</h2>
+            <h2 className="text-lg font-semibold text-red-700 mb-2">
+              Error Loading Profile
+            </h2>
             <p className="text-red-600 mb-4">{error}</p>
             <Link
               href="/direct-login"
@@ -73,8 +97,12 @@ export default function ProfilePage() {
       <Layout title="Profile Not Found">
         <div className="min-h-[60vh] flex flex-col items-center justify-center">
           <div className="bg-yellow-50 p-4 rounded-lg text-center max-w-md">
-            <h2 className="text-lg font-semibold text-yellow-700 mb-2">Profile Not Found</h2>
-            <p className="text-yellow-600 mb-4">No profile data is available. Please log in with Instagram.</p>
+            <h2 className="text-lg font-semibold text-yellow-700 mb-2">
+              Profile Not Found
+            </h2>
+            <p className="text-yellow-600 mb-4">
+              No profile data is available. Please log in with Instagram.
+            </p>
             <Link
               href="/direct-login"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
@@ -93,7 +121,7 @@ export default function ProfilePage() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Cover image/header */}
           <div className="h-40 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
-          
+
           {/* Profile information */}
           <div className="relative px-6 py-8">
             {/* Profile picture */}
@@ -112,55 +140,68 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            
+
             {/* Profile details */}
             <div className="ml-40">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {profileData.name || `@${profileData.username}`}
               </h1>
               <div className="text-gray-600 mb-4">@{profileData.username}</div>
-              
+
               <div className="flex flex-wrap gap-4 text-sm mt-2">
                 <div className="flex items-center text-gray-600">
                   <FaUser className="mr-2 text-gray-400" />
                   <span>{profileData.accountType || "Standard"} Account</span>
                 </div>
-                
+
                 {profileData.website && (
                   <div className="flex items-center text-gray-600">
                     <FaGlobe className="mr-2 text-gray-400" />
-                    <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    <a
+                      href={profileData.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
                       Website
                     </a>
                   </div>
                 )}
               </div>
             </div>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mt-8 mb-6 border-t border-b border-gray-100 py-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{profileData.mediaCount || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {profileData.mediaCount || 0}
+                </div>
                 <div className="text-gray-600 text-sm">Posts</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{profileData.followersCount || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {profileData.followersCount || 0}
+                </div>
                 <div className="text-gray-600 text-sm">Followers</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{profileData.followsCount || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {profileData.followsCount || 0}
+                </div>
                 <div className="text-gray-600 text-sm">Following</div>
               </div>
             </div>
-            
+
             {/* Bio */}
             {profileData.biography && (
               <div className="mb-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-2">Bio</h2>
-                <p className="text-gray-700 whitespace-pre-line">{profileData.biography}</p>
+                <p className="text-gray-700 whitespace-pre-line">
+                  {profileData.biography}
+                </p>
               </div>
             )}
-            
+
             {/* Action buttons */}
             <div className="flex flex-wrap gap-4">
               <Link
@@ -170,7 +211,7 @@ export default function ProfilePage() {
                 <FaImages className="mr-2" />
                 View Media Feed
               </Link>
-              
+
               <Link
                 href="/"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow transition-colors"
