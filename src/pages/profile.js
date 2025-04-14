@@ -22,7 +22,7 @@ export default function ProfilePage() {
         setLoading(true);
 
         // Try to get profile from our API first
-        const response = await fetch("/api/instagram/profile");
+        const response = await fetch("/api/profile");
 
         if (response.ok) {
           const apiData = await response.json();
