@@ -1,29 +1,21 @@
-import { getToken } from "next-auth/jwt";
+import { getSession } from "next-auth/react";
 
 export default async function handler(req, res) {
-  // Only allow GET requests
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+  const session = await getSession({ req });
+
+  if (!session) {
+    return res.status(401).json({ error: "You must be signed in to access this endpoint" });
   }
 
   try {
-    // Get the token from the request
-    const token = await getToken({ req });
-    
-    if (!token) {
-      console.log("No token found for fetching comments");
-      return res.status(401).json({ error: "You must be signed in to access this endpoint" });
-    }
-    
+    const { accessToken } = session.user;
+
     const { mediaId } = req.query;
     const { after } = req.query; // For pagination
     
     if (!mediaId) {
       return res.status(400).json({ error: "Media ID is required" });
     }
-    
-    const accessToken = token.accessToken;
     
     if (!accessToken) {
       console.error("No access token found in token");
