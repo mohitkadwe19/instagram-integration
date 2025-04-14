@@ -16,27 +16,17 @@ export default async function handler(req, res) {
   // Extract session data from cookie
   const { instagram_session } = req.cookies;
   
-  if (!instagram_session) {
-    // If no session cookie, check for environment variable as fallback
-    if (process.env.INSTAGRAM_ACCESS_TOKEN) {
-      // Use the environment variable
-      accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-    } else {
-      return res.status(401).json({ error: 'Unauthorized - No session found' });
+  // Parse session data from cookie
+  try {
+    const sessionData = JSON.parse(instagram_session);
+    const accessToken = sessionData.accessToken;
+    
+    if (!accessToken) {
+      return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
     }
-  } else {
-    // Parse session data from cookie
-    try {
-      const sessionData = JSON.parse(instagram_session);
-      accessToken = sessionData.accessToken;
-      
-      if (!accessToken) {
-        return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-      }
-    } catch (err) {
-      return res.status(401).json({ error: 'Unauthorized - Invalid session format' });
-    }
-  }  
+  } catch (err) {
+    return res.status(401).json({ error: 'Unauthorized - Invalid session format' });
+  }
   
   // Parse session data
   const sessionData = JSON.parse(instagram_session);
