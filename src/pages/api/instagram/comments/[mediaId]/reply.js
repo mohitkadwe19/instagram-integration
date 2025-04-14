@@ -38,8 +38,6 @@ export default async function handler(req, res) {
       }
     );
 
-    console.error("Response status:", response);
-
     if (!response.ok) {
       throw new Error(`Instagram API error: ${response.statusText}`);
     }
