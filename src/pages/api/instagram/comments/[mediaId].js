@@ -1,36 +1,13 @@
+import { getSession } from "next-auth/react";
+
 export default async function handler(req, res) {
-  // Add CORS headers for development
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  const session = await getSession({ req });
 
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // Extract session data from cookie
-  const { instagram_session } = req.cookies;
-  
-  // Parse session data from cookie
-  try {
-    const sessionData = JSON.parse(instagram_session);
-    const accessToken = sessionData.accessToken;
-    
-    if (!accessToken) {
-      return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-    }
-  } catch (err) {
-    return res.status(401).json({ error: 'Unauthorized - Invalid session format' });
+  if (!session) {
+    return res.status(401).json({ error: "You must be signed in to access this endpoint" });
   }
   
-  // Parse session data
-  const sessionData = JSON.parse(instagram_session);
-  const { accessToken } = sessionData;
+  const { accessToken } = session.user;
   
   if (!accessToken) {
     return res.status(401).json({ error: 'Unauthorized - Invalid session data' });

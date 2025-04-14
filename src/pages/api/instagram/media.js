@@ -1,38 +1,15 @@
+import { getSession } from "next-auth/react";
+
 export default async function handler(req, res) {
-    // Add CORS headers for development
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
-  
-    // Handle preflight request
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-  
-    // Only allow GET requests
-    if (req.method !== 'GET') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
-  
+
     try {
-      // Extract session data from cookie
-      const { instagram_session } = req.cookies;
+      const session = await getSession({ req });
       
-      if (!instagram_session) {
-        return res.status(401).json({ error: 'Unauthorized - No session found' });
-      }
-      
-      // Parse session data
-      const sessionData = JSON.parse(instagram_session);
-      const { accessToken, userId } = sessionData;
-      
-      if (!accessToken || !userId) {
-        return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-      }
+        if (!session) {
+          return res.status(401).json({ error: "You must be signed in to access this endpoint" });
+        }
+        
+        const { accessToken, userId } = session.user;
       
       // Check for pagination
       const { after } = req.query;
