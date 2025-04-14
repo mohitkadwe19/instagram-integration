@@ -129,26 +129,26 @@ export default function CommentSection({ mediaId }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800">
-      <div className="flex-grow overflow-y-auto p-4">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Comments</h3>
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex-grow overflow-y-auto p-4" style={{ maxHeight: "calc(90vh - 250px)" }}>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Comments</h3>
         
         {loading && comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8">
             <FaSpinner className="animate-spin h-8 w-8 text-purple-500 mb-4" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading comments...</p>
+            <p className="text-sm text-gray-500">Loading comments...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-4 mb-4">
+          <div className="bg-red-50 rounded-lg p-4 mb-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <FaExclamationCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
+                <FaExclamationCircle className="h-5 w-5 text-red-500" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <p className="text-sm text-red-600">{error}</p>
                 <button 
                   onClick={() => fetchComments()} 
-                  className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                  className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
                   Try again
                 </button>
@@ -157,18 +157,18 @@ export default function CommentSection({ mediaId }) {
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-8">
-            <div className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3">
+            <div className="mx-auto h-12 w-12 text-gray-400 mb-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-gray-500 dark:text-gray-400">No comments yet</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Be the first to comment on this post</p>
+            <p className="text-gray-500">No comments yet</p>
+            <p className="text-sm text-gray-500 mt-1">Be the first to comment on this post</p>
           </div>
         ) : (
           <div className="space-y-4">
             {comments.map((comment) => (
-              <div key={comment.id} className="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
+              <div key={comment.id} className="rounded-lg bg-gray-50 p-3">
                 <div className="flex">
                   <div className="flex-shrink-0 mr-3">
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white overflow-hidden">
@@ -178,24 +178,24 @@ export default function CommentSection({ mediaId }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">@{comment.username}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(comment.timestamp)}</div>
+                        <div className="text-sm font-medium text-gray-900">@{comment.username}</div>
+                        <div className="text-xs text-gray-500">{formatDate(comment.timestamp)}</div>
                       </div>
                       <button
                         onClick={() => setReplyingTo(comment)}
-                        className="inline-flex items-center text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+                        className="inline-flex items-center text-xs font-medium text-purple-600 hover:text-purple-800"
                       >
                         <FaReply className="mr-1" />
                         Reply
                       </button>
                     </div>
-                    <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                    <div className="mt-2 text-sm text-gray-700 whitespace-pre-line">
                       {comment.text}
                     </div>
                     
                     {/* Replies */}
                     {comment.replies && comment.replies.data && comment.replies.data.length > 0 && (
-                      <div className="mt-3 ml-3 pl-3 border-l-2 border-gray-200 dark:border-gray-600 space-y-2">
+                      <div className="mt-3 ml-3 pl-3 border-l-2 border-gray-200 space-y-2">
                         {comment.replies.data.map((reply) => (
                           <div key={reply.id} className="flex">
                             <div className="flex-shrink-0 mr-2">
@@ -206,11 +206,11 @@ export default function CommentSection({ mediaId }) {
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <div className="text-xs font-medium text-gray-900 dark:text-gray-100">@{reply.username}</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">{formatDate(reply.timestamp)}</div>
+                                  <div className="text-xs font-medium text-gray-900">@{reply.username}</div>
+                                  <div className="text-xs text-gray-500">{formatDate(reply.timestamp)}</div>
                                 </div>
                               </div>
-                              <div className="mt-1 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                              <div className="mt-1 text-xs text-gray-700 whitespace-pre-line">
                                 {reply.text}
                               </div>
                             </div>
@@ -246,15 +246,15 @@ export default function CommentSection({ mediaId }) {
       </div>
       
       {/* Comment Form */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="border-t border-gray-200 p-4 sticky bottom-0 bg-white">
         {replyingTo && (
-          <div className="mb-3 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="mb-3 px-3 py-2 bg-gray-50 rounded-lg flex items-center justify-between">
+            <span className="text-sm text-gray-600">
               Replying to <span className="font-medium">@{replyingTo.username}</span>
             </span>
             <button 
               onClick={() => setReplyingTo(null)} 
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              className="text-gray-500 hover:text-gray-700"
             >
               <FaTimes className="w-4 h-4" />
             </button>
@@ -269,7 +269,7 @@ export default function CommentSection({ mediaId }) {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-l-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               disabled={loading || submitting}
             />
           </div>
