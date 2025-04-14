@@ -6,13 +6,10 @@ import { FaCheckCircle, FaInstagram, FaSpinner, FaUser, FaImages, FaComment } fr
 
 export default function AuthSuccess() {
   const router = useRouter();
-  const { username } = router.query;
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    if (!username) return;
-
     // Get the full user data from cookies
     const getProfileData = async () => {
       try {
@@ -55,7 +52,7 @@ export default function AuthSuccess() {
     setTimeout(() => {
       getProfileData();
     }, 1000);
-  }, [username]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
@@ -81,7 +78,7 @@ export default function AuthSuccess() {
               Authentication Successful!
             </h2>
             <p className="mt-4 text-lg text-gray-700">
-              Welcome, <span className="font-medium">@{username}</span>!
+              Welcome, <span className="font-medium">@{userData.username}</span>!
             </p>
             <p className="mt-2 text-gray-600">
               Your Instagram account has been successfully connected.
@@ -90,9 +87,9 @@ export default function AuthSuccess() {
             {userData && (
               <div className="mt-8 bg-gray-50 p-6 rounded-lg">
                 <div className="flex items-center justify-center mb-4">
-                  {userData.profilePictureUrl ? (
+                  {userData.profile_picture_url ? (
                     <img 
-                      src={userData.profilePictureUrl} 
+                      src={userData.profile_picture_url} 
                       alt={userData.username}
                       className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
                     />
@@ -103,20 +100,20 @@ export default function AuthSuccess() {
                   )}
                 </div>
                 
-                <h3 className="text-lg font-medium text-gray-900">{userData.name || `@${userData.username}`}</h3>
+                <h3 className="text-lg font-medium text-gray-900">{`@${userData.username}`}</h3>
                 <p className="text-sm text-gray-500">{userData.accountType || ''} Account</p>
                 
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-gray-900">{userData.mediaCount || 0}</div>
+                    <div className="text-lg font-bold text-gray-900">{userData.media_count || 0}</div>
                     <div className="text-xs text-gray-500">Posts</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-gray-900">{userData.followersCount || 0}</div>
+                    <div className="text-lg font-bold text-gray-900">{userData.followers_count || 0}</div>
                     <div className="text-xs text-gray-500">Followers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-gray-900">{userData.followsCount || 0}</div>
+                    <div className="text-lg font-bold text-gray-900">{userData.follows_count || 0}</div>
                     <div className="text-xs text-gray-500">Following</div>
                   </div>
                 </div>
