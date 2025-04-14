@@ -504,14 +504,6 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-1">Browse Media</h3>
               <p className="text-gray-500 text-sm text-center">View your photos and videos</p>
             </Link>
-            
-            <Link href="/analytics" className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
-              <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-                <FaChartLine className="h-6 w-6 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-1">Analytics</h3>
-              <p className="text-gray-500 text-sm text-center">Track your account performance</p>
-            </Link>
           </motion.div>
         </div>
       </div>
