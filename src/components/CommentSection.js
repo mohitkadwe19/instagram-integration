@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { FaReply, FaTimes, FaSpinner, FaExclamationCircle, FaPaperPlane, FaUser } from "react-icons/fa";
+import { useSession } from "next-auth/react";
 
 export default function CommentSection({ mediaId }) {
+  const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,6 +83,11 @@ export default function CommentSection({ mediaId }) {
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     
+    if (!session) {
+      setError("You must be signed in to post comments");
+      return;
+    }
+    
     if (!commentText.trim() || submitting) return;
     
     try {
@@ -99,8 +106,11 @@ export default function CommentSection({ mediaId }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // Add this to ensure CSRF protection works properly
+          "X-CSRF-Token": session?.csrfToken || "",
         },
         body: JSON.stringify(payload),
+        credentials: "include", // Important: include cookies with the request
       });
       
       if (!response.ok) {
@@ -270,13 +280,13 @@ export default function CommentSection({ mediaId }) {
               onChange={(e) => setCommentText(e.target.value)}
               placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
               className="w-full px-4 py-2 border border-gray-300 rounded-l-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              disabled={loading || submitting}
+              disabled={loading || submitting || !session}
             />
           </div>
           <button
             type="submit"
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-r-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 flex items-center justify-center"
-            disabled={loading || !commentText.trim() || submitting}
+            disabled={loading || !commentText.trim() || submitting || !session}
           >
             {submitting ? (
               <FaSpinner className="animate-spin h-4 w-4" />
@@ -285,6 +295,12 @@ export default function CommentSection({ mediaId }) {
             )}
           </button>
         </form>
+        
+        {!session && (
+          <p className="text-xs text-center mt-2 text-gray-500">
+            You need to be signed in to post comments
+          </p>
+        )}
       </div>
     </div>
   );
