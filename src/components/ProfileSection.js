@@ -166,7 +166,7 @@ export default function ProfileSection() {
         
         <div className="mt-6 flex justify-end">
           <a 
-            href={`https://graph.facebook.com/v18.0/${profile.username}`}
+            href={`https://instagram.com/${profile.username}`}
             target="_blank"
             rel="noopener noreferrer" 
             className="text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200"

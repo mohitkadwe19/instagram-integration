@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       const { after } = req.query;
       
       // Construct URL to fetch comments
-      let commentsUrl = `https://graph.facebook.com/v18.0/${mediaId}/comments?fields=id,text,timestamp,username,like_count,replies{id,text,timestamp,username,like_count}&access_token=${accessToken}`;
+      let commentsUrl = `https://graph.instagram.com/${mediaId}/comments?fields=id,text,timestamp,username,like_count,replies{id,text,timestamp,username,like_count}&access_token=${accessToken}`;
       
       if (after) {
         commentsUrl += `&after=${after}`;
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       }
       
       // Construct URL to post a comment
-      let commentUrl = `https://graph.facebook.com/v18.0/${mediaId}/comments`;
+      let commentUrl = `https://graph.instagram.com/${mediaId}/comments`;
       
       // Prepare payload
       const payload = new URLSearchParams();

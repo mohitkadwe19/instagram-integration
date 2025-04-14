@@ -124,7 +124,7 @@ export default function Layout({ children, title = "Instagram Integration App" }
                         className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
                       >
                         <a
-                          href={`https://facebook.com/v18.0/${session.user.username || session.user.name}`}
+                          href={`https://instagram.com/${session.user.username || session.user.name}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -234,7 +234,7 @@ export default function Layout({ children, title = "Instagram Integration App" }
                   </div>
                   
                   <a
-                    href={`https://facebook.com/v18.0/${session.user.username || session.user.name}`}
+                    href={`https://instagram.com/${session.user.username || session.user.name}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
