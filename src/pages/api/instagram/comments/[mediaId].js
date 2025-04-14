@@ -6,103 +6,56 @@ export default async function handler(req, res) {
   if (!session) {
     return res.status(401).json({ error: "You must be signed in to access this endpoint" });
   }
-  
-  const { accessToken } = session.user;
-  
-  if (!accessToken) {
-    return res.status(401).json({ error: 'Unauthorized - Invalid session data' });
-  }
 
-  // Get media ID from the URL
   const { mediaId } = req.query;
-  
-  
-  if (!mediaId) {
-    return res.status(400).json({ error: 'Media ID is required' });
-  }
 
   try {
-    // GET: Fetch comments for a media item
-    if (req.method === 'GET') {
-      // Check for pagination
-      const { after } = req.query;
-      
-      // Construct URL to fetch comments
-      let commentsUrl = `https://graph.instagram.com/${mediaId}/comments?fields=id,text,timestamp,username,like_count,replies{id,text,timestamp,username,like_count}&access_token=${accessToken}`;
-      
-      if (after) {
-        commentsUrl += `&after=${after}`;
-      }
-      
-      // Fetch comments from Instagram
-      const commentsResponse = await fetch(commentsUrl);
-      
-      if (!commentsResponse.ok) {
-        const errorData = await commentsResponse.json();
-        console.error('Error fetching comments from Instagram:', errorData);
-        return res.status(commentsResponse.status).json({
-          error: 'Failed to fetch comments from Instagram',
-          details: errorData
-        });
-      }
-      
-      const commentsData = await commentsResponse.json();
+    const { accessToken } = session.user;
 
-      console.log('Fetched comments data:', commentsData);
-      
-      // Return the comments data
-      return res.status(200).json(commentsData);
-    }
-    
-    // POST: Add a comment to a media item
-    if (req.method === 'POST') {
-      const { text, replied_to_comment_id } = req.body;
-      
+    // For GET requests, fetch comments
+    if (req.method === "GET") {
+      const response = await fetch(
+        `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?fields=id,text,timestamp,username,replies{id,text,timestamp,username}&access_token=${accessToken}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Instagram API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      res.status(200).json(data);
+    } 
+    // For POST requests, add a comment
+    else if (req.method === "POST") {
+      const { text } = req.body;
+
       if (!text) {
-        return res.status(400).json({ error: 'Comment text is required' });
+        return res.status(400).json({ error: "Comment text is required" });
       }
-      
-      // Construct URL to post a comment
-      let commentUrl = `https://graph.instagram.com/${mediaId}/comments`;
-      
-      // Prepare payload
-      const payload = new URLSearchParams();
-      payload.append('message', text);
-      payload.append('access_token', accessToken);
-      
-      // Add reply parent comment ID if replying
-      if (replied_to_comment_id) {
-        payload.append('replied_to_comment_id', replied_to_comment_id);
+
+      const response = await fetch(
+        `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?access_token=${accessToken}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: text }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Instagram API error: ${response.statusText}`);
       }
-      
-      // Post comment to Instagram
-      const commentResponse = await fetch(commentUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: payload
-      });
-      
-      if (!commentResponse.ok) {
-        const errorData = await commentResponse.json();
-        console.error('Error posting comment to Instagram:', errorData);
-        return res.status(commentResponse.status).json({
-          error: 'Failed to post comment to Instagram',
-          details: errorData
-        });
-      }
-      
-      const commentData = await commentResponse.json();
-      
-      // Return the comment data
-      return res.status(201).json(commentData);
+
+      const data = await response.json();
+      res.status(201).json(data);
+    } else {
+      res.setHeader("Allow", ["GET", "POST"]);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-    
-    // Method not allowed
-    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('Error in comments endpoint:', error);
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
+    console.error("Error with comments:", error);
+    res.status(500).json({ error: "Failed to process comments", details: error.message });
   }
 }
