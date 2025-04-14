@@ -1,87 +1,56 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]";
+import { getToken } from "next-auth/jwt";
 
 export default async function handler(req, res) {
-  // Use getServerSession instead of getSession for API routes
-  const session = await getServerSession(req, res, authOptions);
-  
-  if (!session) {
-    console.log("No session found:", req.method, req.url);
-    return res.status(401).json({ error: "You must be signed in to access this endpoint" });
+  // Only allow GET requests
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
-  
-  console.log("Session found, user:", session.user.username || session.user.name);
-  
-  const { mediaId } = req.query;
-  
-  if (!mediaId) {
-    return res.status(400).json({ error: "Media ID is required" });
-  }
-  
+
   try {
-    const { accessToken } = session.user;
+    // Get the token from the request
+    const token = await getToken({ req });
+    
+    if (!token) {
+      console.log("No token found for fetching comments");
+      return res.status(401).json({ error: "You must be signed in to access this endpoint" });
+    }
+    
+    const { mediaId } = req.query;
+    const { after } = req.query; // For pagination
+    
+    if (!mediaId) {
+      return res.status(400).json({ error: "Media ID is required" });
+    }
+    
+    const accessToken = token.accessToken;
     
     if (!accessToken) {
-      console.error("No access token found in session");
+      console.error("No access token found in token");
       return res.status(401).json({ error: "Instagram access token not available" });
     }
+
+    console.log(`Fetching comments for media: ${mediaId}${after ? ' with pagination' : ''}`);
     
-    // For GET requests, fetch comments
-    if (req.method === "GET") {
-      console.log("Fetching comments for media:", mediaId);
-      
-      const response = await fetch(
-        `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?fields=id,text,timestamp,username,replies{id,text,timestamp,username}&access_token=${accessToken}`
-      );
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Instagram API error:", response.status, errorText);
-        throw new Error(`Instagram API error: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      res.status(200).json(data);
+    // Construct the URL with pagination if provided
+    let url = `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?fields=id,text,timestamp,username,replies{id,text,timestamp,username}&access_token=${accessToken}`;
+    
+    if (after) {
+      url += `&after=${after}`;
     }
     
-    // For POST requests, add a comment
-    else if (req.method === "POST") {
-      const { text, replied_to_comment_id } = req.body;
-      
-      console.log("Adding comment to media:", mediaId, "Text:", text);
-      
-      if (!text) {
-        return res.status(400).json({ error: "Comment text is required" });
-      }
-      
-      // Construct the URL - add replied_to_comment_id parameter if replying to a comment
-      let url = `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?access_token=${accessToken}`;
-      
-      const response = await fetch(
-        url,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ message: text }),
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Error posting comment:", response.status, errorData);
-        throw new Error(`Instagram API error: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      res.status(201).json(data);
-    } else {
-      res.setHeader("Allow", ["GET", "POST"]);
-      res.status(405).end(`Method ${req.method} Not Allowed`);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Instagram API error:", response.status, errorText);
+      throw new Error(`Instagram API error: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    res.status(200).json(data);
   } catch (error) {
-    console.error("Error with comments:", error);
-    res.status(500).json({ error: "Failed to process comments", details: error.message });
+    console.error("Error fetching comments:", error);
+    res.status(500).json({ error: "Failed to fetch comments", details: error.message });
   }
 }

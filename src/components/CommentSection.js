@@ -27,6 +27,7 @@ export default function CommentSection({ mediaId }) {
     }
   }, [replyingTo]);
 
+  // Function to fetch comments from our separate API endpoint
   const fetchComments = async (after = null) => {
     try {
       if (after) {
@@ -35,7 +36,7 @@ export default function CommentSection({ mediaId }) {
         setLoading(true);
       }
       
-      let url = `/api/instagram/comments/${mediaId}`;
+      let url = `/api/instagram/fetchComments/${mediaId}`;
       if (after) {
         url += `?after=${after}`;
       }
@@ -80,6 +81,7 @@ export default function CommentSection({ mediaId }) {
     }
   };
 
+  // Function to post a comment or reply using our separate API endpoint
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     
@@ -93,23 +95,21 @@ export default function CommentSection({ mediaId }) {
     try {
       setSubmitting(true);
       
-      const payload = {
-        text: commentText,
-      };
+      const endpoint = replyingTo 
+        ? `/api/instagram/postReply/${mediaId}?commentId=${replyingTo.id}`
+        : `/api/instagram/postReply/${mediaId}`;
       
-      // If replying to a comment
-      if (replyingTo) {
-        payload.replied_to_comment_id = replyingTo.id;
-      }
+      // If replying to a comment, modify the text to include @mention
+      const textToSubmit = replyingTo 
+        ? `@${replyingTo.username} ${commentText}` 
+        : commentText;
       
-      const response = await fetch(`/api/instagram/comments/${mediaId}`, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add this to ensure CSRF protection works properly
-          "X-CSRF-Token": session?.csrfToken || "",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ text: textToSubmit }),
         credentials: "include", // Important: include cookies with the request
       });
       
