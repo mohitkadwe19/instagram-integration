@@ -9,10 +9,8 @@ import {
   FaImages, 
   FaChevronLeft, 
   FaChevronRight, 
-  FaShare, 
   FaSpinner, 
-  FaExclamationCircle,
-  FaDownload
+  FaExclamationCircle
 } from "react-icons/fa";
 import CommentSection from "./CommentSection";
 
@@ -70,18 +68,22 @@ export default function MediaModal({ media, onClose }) {
       return (
         <div className="relative w-full h-full">
           {currentItem.media_type === "VIDEO" ? (
-            <video
-              src={currentItem.media_url}
-              controls
-              autoPlay
-              className="w-full h-full object-contain"
-            />
+            <div className="w-full h-full flex items-center justify-center">
+              <video
+                src={currentItem.media_url}
+                controls
+                autoPlay
+                className="max-w-full max-h-full object-contain"
+                style={{ maxHeight: "calc(90vh - 74px)" }}
+              />
+            </div>
           ) : (
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center">
               <img
                 src={currentItem.media_url}
                 alt={media.caption || "Carousel item"}
                 className="max-w-full max-h-full object-contain"
+                style={{ maxHeight: "calc(90vh - 74px)" }}
               />
             </div>
           )}
@@ -128,22 +130,26 @@ export default function MediaModal({ media, onClose }) {
     // For videos
     if (media.media_type === "VIDEO") {
       return (
-        <video
-          src={media.media_url}
-          controls
-          autoPlay
-          className="w-full h-full object-contain"
-        />
+        <div className="w-full h-full flex items-center justify-center">
+          <video
+            src={media.media_url}
+            controls
+            autoPlay
+            className="max-w-full max-h-full object-contain"
+            style={{ maxHeight: "calc(90vh - 74px)" }}
+          />
+        </div>
       );
     }
     
     // For images
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center">
         <img
           src={media.media_url}
           alt={media.caption || "Media"}
           className="max-w-full max-h-full object-contain"
+          style={{ maxHeight: "calc(90vh - 74px)" }}
         />
       </div>
     );
@@ -204,7 +210,7 @@ export default function MediaModal({ media, onClose }) {
         {/* Content */}
         <div className="flex flex-col md:flex-row flex-grow h-[calc(90vh-74px)]">
           {/* Media */}
-          <div className="md:w-3/5 h-[280px] md:h-auto relative bg-black flex-shrink-0">
+          <div className="md:w-3/5 h-[320px] md:h-full relative bg-black flex-shrink-0">
             {loading ? (
               <div className="w-full h-full flex items-center justify-center">
                 <FaSpinner className="animate-spin h-12 w-12 text-purple-500" />
@@ -223,7 +229,7 @@ export default function MediaModal({ media, onClose }) {
 
           {/* Comments & Info Section */}
           <div className="md:w-2/5 flex flex-col bg-white overflow-hidden">
-            <div className="flex flex-col overflow-y-auto h-full">
+            <div className="flex flex-col h-full">
               {/* Media Info */}
               <div className="p-4 border-b border-gray-200">
                 {/* Engagement stats */}
@@ -239,21 +245,6 @@ export default function MediaModal({ media, onClose }) {
                       <FaComment className="w-5 h-5" />
                     </div>
                     <span className="ml-2 font-medium">{media.comments_count || 0}</span>
-                  </div>
-                  <div className="flex-grow"></div>
-                  <div className="flex space-x-2">
-                    <button 
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-                      aria-label="Share"
-                    >
-                      <FaShare className="w-4 h-4" />
-                    </button>
-                    <button 
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-                      aria-label="Download"
-                    >
-                      <FaDownload className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               
@@ -284,8 +275,8 @@ export default function MediaModal({ media, onClose }) {
                 </div>
               </div>
 
-              {/* Comments Section with its own scrollable area */}
-              <div className="flex-grow overflow-auto">
+              {/* Comments Section with fixed height */}
+              <div className="flex-grow overflow-hidden">
                 <CommentSection mediaId={media.id} />
               </div>
             </div>
