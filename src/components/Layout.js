@@ -13,17 +13,38 @@ export default function Layout({ children, title = "Instagram Integration App" }
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Handle dark mode
+  // Initialize theme based on localStorage or system preference
   useEffect(() => {
-    // Check for saved preference or system preference
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDark);
+      
+      setIsDarkMode(shouldUseDarkMode);
+      
+      // Initial class setup
+      if (shouldUseDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, []);
+
+  // Apply theme changes whenever isDarkMode changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+  }, [isDarkMode]);
 
   // Handle scroll events for header styling
   useEffect(() => {
@@ -36,14 +57,7 @@ export default function Layout({ children, title = "Instagram Integration App" }
   }, []);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    }
+    setIsDarkMode(prevMode => !prevMode);
   };
 
   const handleSignOut = async () => {
