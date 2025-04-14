@@ -13,6 +13,11 @@ export default function SignIn({ providers: initialProviders }) {
   const router = useRouter();
   const { callbackUrl, error: routeError } = router.query;
 
+  console.log("Initial providers:", initialProviders);
+  console.log("Route error:", routeError);
+  console.log("Callback URL:", callbackUrl);
+  console.log("Router query:", router.query);
+
   // If no providers were fetched server-side, try client-side
   useEffect(() => {
     if (!initialProviders || Object.keys(initialProviders).length === 0) {
@@ -57,7 +62,7 @@ export default function SignIn({ providers: initialProviders }) {
                      (typeof window !== 'undefined' ? window.location.origin : '');
                      
       // Set the effective callback URL
-      const effectiveCallbackUrl = callbackUrl || `${baseUrl}/`;
+      const effectiveCallbackUrl = `${baseUrl}/success`;
       console.log("Callback URL:", effectiveCallbackUrl);
       
       setIsLoading(true);
