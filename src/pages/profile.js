@@ -127,9 +127,9 @@ export default function ProfilePage() {
             {/* Profile picture */}
             <div className="absolute -top-16 left-6">
               <div className="w-32 h-32 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
-                {profileData.profilePictureUrl ? (
+                {profileData.profile_picture_url ? (
                   <img
-                    src={profileData.profilePictureUrl}
+                    src={profileData.profile_picture_url}
                     alt={profileData.username}
                     className="w-full h-full object-cover"
                   />
@@ -151,7 +151,7 @@ export default function ProfilePage() {
               <div className="flex flex-wrap gap-4 text-sm mt-2">
                 <div className="flex items-center text-gray-600">
                   <FaUser className="mr-2 text-gray-400" />
-                  <span>{profileData.accountType || "Standard"} Account</span>
+                  <span>{profileData.account_type || "Standard"} Account</span>
                 </div>
 
                 {profileData.website && (
@@ -174,19 +174,19 @@ export default function ProfilePage() {
             <div className="grid grid-cols-3 gap-4 mt-8 mb-6 border-t border-b border-gray-100 py-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
-                  {profileData.mediaCount || 0}
+                  {profileData.media_count || 0}
                 </div>
                 <div className="text-gray-600 text-sm">Posts</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
-                  {profileData.followersCount || 0}
+                  {profileData.followers_count || 0}
                 </div>
                 <div className="text-gray-600 text-sm">Followers</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
-                  {profileData.followsCount || 0}
+                  {profileData.follows_count || 0}
                 </div>
                 <div className="text-gray-600 text-sm">Following</div>
               </div>
