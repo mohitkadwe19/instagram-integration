@@ -29,6 +29,8 @@ export default async function handler(req, res) {
     else if (req.method === "POST") {
       const { text } = req.body;
 
+      console.log("Adding comment:", text);
+
       if (!text) {
         return res.status(400).json({ error: "Comment text is required" });
       }

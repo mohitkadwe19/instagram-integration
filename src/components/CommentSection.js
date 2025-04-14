@@ -95,7 +95,7 @@ export default function CommentSection({ mediaId }) {
         payload.replied_to_comment_id = replyingTo.id;
       }
       
-      const response = await fetch(`/api/instagram/comments/${mediaId}/reply`, {
+      const response = await fetch(`/api/instagram/comments/${mediaId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
