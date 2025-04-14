@@ -1,8 +1,9 @@
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(req, res) {
-  // Ensure we get the session for both GET and POST requests
-  const session = await getSession({ req });
+  // Use getServerSession instead of getSession for API routes
+  const session = await getServerSession(req, res, authOptions);
   
   if (!session) {
     console.log("No session found:", req.method, req.url);
