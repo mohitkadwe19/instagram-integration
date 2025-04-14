@@ -1,7 +1,5 @@
 import { useSession } from "next-auth/react";
 import Layout from "../components/Layout";
-import ProfileSection from "../components/ProfileSection";
-import MediaFeed from "../components/MediaFeed";
 import Link from "next/link";
 import {
   FaInstagram,
@@ -10,6 +8,8 @@ import {
   FaRegComment,
   FaUserCircle,
   FaImages,
+  FaUser,
+  FaChartLine
 } from "react-icons/fa";
 import Head from "next/head";
 import { motion } from "framer-motion";
@@ -426,18 +426,95 @@ export default function Home() {
     );
   }
 
-  // Logged in state with profile and media
+  // Logged in state with welcome message instead of repeating profile and media sections
   return (
-    <Layout title="Instagram Integration App - Dashboard">
-      <motion.div
-        className="space-y-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <ProfileSection />
-        <MediaFeed />
-      </motion.div>
+    <Layout title="Instagram Integration - Dashboard">
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="text-center max-w-3xl mx-auto">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <div className="relative inline-block">
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
+                {session.user.image ? (
+                  <img
+                    src={session.user.image}
+                    alt={session.user.username || session.user.name}
+                    className="w-20 h-20 rounded-full border-4 border-white"
+                  />
+                ) : (
+                  <FaUser className="h-12 w-12 text-white" />
+                )}
+              </div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.3, type: "spring" }}
+                className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-md"
+              >
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+          
+          <motion.h1 
+            className="text-4xl font-bold mb-4 text-gray-900"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600">{session.user.username || session.user.name}!</span>
+          </motion.h1>
+          
+          <motion.p
+            className="text-xl text-gray-600 mb-10"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            Your Instagram account is connected successfully.
+            What would you like to do next?
+          </motion.p>
+          
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Link href="/profile" className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+              <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                <FaUser className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">View Profile</h3>
+              <p className="text-gray-500 text-sm text-center">See your account details and stats</p>
+            </Link>
+            
+            <Link href="/feed" className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+              <div className="w-14 h-14 bg-pink-100 rounded-full flex items-center justify-center mb-4">
+                <FaImages className="h-6 w-6 text-pink-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">Browse Media</h3>
+              <p className="text-gray-500 text-sm text-center">View your photos and videos</p>
+            </Link>
+            
+            <Link href="/analytics" className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+              <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                <FaChartLine className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">Analytics</h3>
+              <p className="text-gray-500 text-sm text-center">Track your account performance</p>
+            </Link>
+          </motion.div>
+        </div>
+      </div>
     </Layout>
   );
 }
