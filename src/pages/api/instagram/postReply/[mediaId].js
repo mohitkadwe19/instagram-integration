@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const { accessToken, userId } = session.user;
+    const { accessToken } = session.user;
     
     if (!accessToken) {
       console.log("No access token found for posting reply");
