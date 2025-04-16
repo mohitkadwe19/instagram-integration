@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { FaReply, FaTimes, FaSpinner, FaExclamationCircle, FaPaperPlane, FaUser } from "react-icons/fa";
+import { FaReply, FaTimes, FaSpinner, FaExclamationCircle, FaPaperPlane, FaUser, FaSync } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 
-export default function CommentSection({ mediaId }) {
+export default function CommentSection({ mediaId, expectedCommentCount = 0 }) {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +13,7 @@ export default function CommentSection({ mediaId }) {
   const [paginationToken, setPaginationToken] = useState(null);
   const [hasMoreComments, setHasMoreComments] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [commentCountMismatch, setCommentCountMismatch] = useState(false);
   const commentInputRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function CommentSection({ mediaId }) {
       commentInputRef.current.focus();
     }
   }, [replyingTo]);
+
+  // Check if there's a mismatch between expected comment count and actual comments
+  useEffect(() => {
+    if (!loading && expectedCommentCount > 0 && comments.length === 0) {
+      setCommentCountMismatch(true);
+    } else {
+      setCommentCountMismatch(false);
+    }
+  }, [loading, expectedCommentCount, comments.length]);
 
   // Function to fetch comments from our separate API endpoint
   const fetchComments = async (after = null) => {
@@ -48,22 +58,31 @@ export default function CommentSection({ mediaId }) {
       }
       
       const data = await response.json();
+      console.log("Comments API response:", data); // Debug log
       
       if (data.error) {
         throw new Error(data.error.message || "Error fetching comments");
       }
       
-      if (after) {
-        setComments(prev => [...prev, ...data.data]);
+      // Handle the data structure correctly
+      if (data && data.data) {
+        if (after) {
+          setComments(prev => [...prev, ...data.data]);
+        } else {
+          setComments(data.data || []);
+        }
+        
+        // Check for pagination
+        if (data.paging && data.paging.cursors && data.paging.cursors.after) {
+          setPaginationToken(data.paging.cursors.after);
+          setHasMoreComments(true);
+        } else {
+          setHasMoreComments(false);
+        }
       } else {
-        setComments(data.data || []);
-      }
-      
-      // Check for pagination
-      if (data.paging && data.paging.cursors && data.paging.cursors.after) {
-        setPaginationToken(data.paging.cursors.after);
-        setHasMoreComments(true);
-      } else {
+        // If data doesn't have the expected structure
+        console.error("Unexpected API response structure:", data);
+        setComments([]);
         setHasMoreComments(false);
       }
     } catch (err) {
@@ -161,6 +180,25 @@ export default function CommentSection({ mediaId }) {
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
                   Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : commentCountMismatch ? (
+          <div className="bg-yellow-50 rounded-lg p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <FaExclamationCircle className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-600">
+                  This post has {expectedCommentCount} {expectedCommentCount === 1 ? 'comment' : 'comments'} according to Instagram, but they could not be loaded.
+                </p>
+                <button 
+                  onClick={() => fetchComments()} 
+                  className="mt-2 flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                >
+                  <FaSync className="mr-1" /> Retry loading comments
                 </button>
               </div>
             </div>

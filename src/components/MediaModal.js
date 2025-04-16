@@ -277,7 +277,10 @@ export default function MediaModal({ media, onClose }) {
 
               {/* Comments Section with fixed height */}
               <div className="flex-grow overflow-hidden">
-                <CommentSection mediaId={media.id} />
+                <CommentSection 
+                  mediaId={media.id} 
+                  expectedCommentCount={media.comments_count || 0}
+                />
               </div>
             </div>
           </div>
