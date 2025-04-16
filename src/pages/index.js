@@ -484,7 +484,7 @@ export default function Home() {
           </motion.p>
           
           <motion.div
-            className="grid md:grid-cols-3 gap-6"
+            className="grid md:grid-cols-3 gap-6 center"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
 import {
   FaInstagram,
   FaUser,
@@ -7,17 +8,25 @@ import {
   FaGlobe,
   FaUserFriends,
   FaImages,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import Layout from "../components/Layout";
 
 export default function ProfilePage() {
+  const { data: session, status } = useSession();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Update the useEffect in your ProfilePage component
+  // Update the useEffect to depend on session
   useEffect(() => {
     const fetchProfileData = async () => {
+      // Don't attempt to fetch if there's no session
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
 
@@ -55,7 +64,43 @@ export default function ProfilePage() {
     };
 
     fetchProfileData();
-  }, []);
+  }, [session]); // Add session dependency
+
+  // Show loading state while session is being fetched
+  if (status === "loading") {
+    return (
+      <Layout title="Loading...">
+        <div className="min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="relative w-20 h-20">
+            <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-purple-200"></div>
+            <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-t-purple-600 animate-spin"></div>
+          </div>
+          <p className="mt-6 text-lg text-gray-600">Loading session...</p>
+        </div>
+      </Layout>
+    );
+  }
+  
+  // Show sign in prompt if not authenticated
+  if (!session) {
+    return (
+      <Layout title="Authentication Required">
+        <div className="min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="bg-yellow-50 p-6 rounded-lg text-center max-w-md">
+            <FaExclamationCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+            <h2 className="text-lg font-semibold text-yellow-700 mb-2">Authentication Required</h2>
+            <p className="text-yellow-600 mb-4">Please sign in to view your Instagram profile.</p>
+            <button
+              onClick={() => signIn("instagram")}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              Sign in with Instagram
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (loading) {
     return (

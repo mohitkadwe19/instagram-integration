@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
 import { FaHeart, FaComment, FaVideo, FaImage, FaImages, FaSpinner, FaExclamationCircle, FaAngleDown } from "react-icons/fa";
 import Layout from "../components/Layout";
 import MediaModal from "../components/MediaModal";
 
 export default function FeedPage() {
+  const { data: session, status } = useSession();
   const [mediaItems, setMediaItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,6 +18,11 @@ export default function FeedPage() {
 
   const fetchMedia = async (after = null) => {
     try {
+      // Check if session exists before making API call
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+
       const isInitialFetch = !after;
       if (isInitialFetch) {
         setLoading(true);
@@ -65,33 +72,47 @@ export default function FeedPage() {
   };
 
   useEffect(() => {
-    fetchMedia();
-  }, []);
-
-  const loadMore = () => {
-    if (paginationCursor && hasMore && !loadingMore) {
-      fetchMedia(paginationCursor);
+    // Only fetch media when session is available
+    if (session) {
+      fetchMedia();
     }
-  };
+  }, [session]);
 
-  const openMediaDetails = (media) => {
-    setSelectedMedia(media);
-  };
-
-  const closeMediaDetails = () => {
-    setSelectedMedia(null);
-  };
-
-  const getMediaTypeIcon = (mediaType) => {
-    switch (mediaType) {
-      case "VIDEO":
-        return <FaVideo className="text-white text-lg absolute top-3 right-3 z-10 drop-shadow-md" />;
-      case "CAROUSEL_ALBUM":
-        return <FaImages className="text-white text-lg absolute top-3 right-3 z-10 drop-shadow-md" />;
-      default:
-        return <FaImage className="text-white text-lg absolute top-3 right-3 z-10 drop-shadow-md" />;
-    }
-  };
+  // Show loading state while session is being fetched
+  if (status === "loading") {
+    return (
+      <Layout title="Loading...">
+        <div className="min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="relative w-20 h-20">
+            <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-purple-200"></div>
+            <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full border-4 border-t-purple-600 animate-spin"></div>
+          </div>
+          <p className="mt-6 text-lg text-gray-600">Loading session...</p>
+        </div>
+      </Layout>
+    );
+  }
+  
+  // Show sign in prompt if not authenticated
+  if (!session) {
+    return (
+      <Layout title="Authentication Required">
+        <div className="min-h-[60vh] flex flex-col items-center justify-center">
+          <div className="bg-yellow-50 p-6 rounded-lg text-center max-w-md">
+            <FaExclamationCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+            <h2 className="text-lg font-semibold text-yellow-700 mb-2">Authentication Required</h2>
+            <p className="text-yellow-600 mb-4">Please sign in to view your Instagram media.</p>
+            <button
+              onClick={() => signIn("instagram")}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              Sign in with Instagram
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (loading && mediaItems.length === 0) {
     return (
