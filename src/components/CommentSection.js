@@ -64,6 +64,16 @@ export default function CommentSection({ mediaId, expectedCommentCount = 0 }) {
         throw new Error(data.error.message || "Error fetching comments");
       }
       
+      // Check if API returned metadata about expected comments count
+      if (data._meta && data._meta.expectedCount) {
+        // If we have an expected count but no actual comments, show the mismatch
+        if ((!data.data || data.data.length === 0) && data._meta.expectedCount > 0) {
+          setCommentCountMismatch(true);
+        } else {
+          setCommentCountMismatch(false);
+        }
+      }
+      
       // Handle the data structure correctly
       if (data && data.data) {
         if (after) {

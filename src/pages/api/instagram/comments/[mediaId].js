@@ -10,6 +10,7 @@ export default async function handler(req, res) {
 
   try {
     const { accessToken } = session.user;
+    const { userId } = session.user;
 
     const { mediaId } = req.query;
     const { after } = req.query; // For pagination
@@ -26,85 +27,156 @@ export default async function handler(req, res) {
     console.log(`Fetching comments for media: ${mediaId}${after ? ' with pagination' : ''}`);
     
     // First, check if the media exists and has comments_count
-    const mediaUrl = `${process.env.INSTAGRAM_API_URL}/${mediaId}?fields=id,comments_count&access_token=${accessToken}`;
+    // Using graph.instagram.com directly as per Instagram API documentation
+    const mediaUrl = `https://graph.instagram.com/v22.0/${mediaId}?fields=id,comments_count,caption&access_token=${accessToken}`;
+    
+    let expectedCommentsCount = 0;
+    let commentsList = [];
     
     try {
+      console.log(`Checking media metadata from: ${mediaUrl.replace(accessToken, 'ACCESS_TOKEN_HIDDEN')}`);
       const mediaResponse = await fetch(mediaUrl);
+      
       if (mediaResponse.ok) {
         const mediaData = await mediaResponse.json();
-        console.log(`Media ${mediaId} has comments_count:`, mediaData.comments_count);
+        console.log(`Media ${mediaId} API response:`, JSON.stringify(mediaData));
         
-        if (mediaData.comments_count === 0) {
-          // If Instagram indicates there are no comments, return early
+        expectedCommentsCount = mediaData.comments_count || 0;
+        console.log(`Media ${mediaId} has comments_count:`, expectedCommentsCount);
+        
+        // Early return if no comments
+        if (expectedCommentsCount === 0) {
           console.log(`No comments available for media ${mediaId} according to comments_count`);
           return res.status(200).json({
             data: [],
             paging: {}
           });
         }
+      } else {
+        const errorText = await mediaResponse.text();
+        console.error(`Media info fetch error (${mediaResponse.status}):`, errorText);
       }
     } catch (mediaError) {
       console.warn(`Could not fetch media info for ${mediaId}:`, mediaError.message);
-      // Continue anyway to try fetching comments directly
     }
     
-    // Construct the URL with pagination if provided
-    let url = `${process.env.INSTAGRAM_API_URL}/${mediaId}/comments?fields=id,text,timestamp,username,replies{id,text,timestamp,username}&access_token=${accessToken}`;
+    // APPROACH 1: Direct comment fetch using graph.instagram.com as per docs
+    let commentsUrl = `https://graph.instagram.com/v22.0/${mediaId}/comments`;
+    
+    // Add fields parameter per documentation
+    const fields = "id,text,timestamp,username,replies{id,text,timestamp,username}";
+    commentsUrl += `?fields=${fields}&access_token=${accessToken}`;
     
     if (after) {
-      url += `&after=${after}`;
+      commentsUrl += `&after=${after}`;
     }
     
-    console.log(`Fetching comments from URL: ${url.replace(accessToken, 'HIDDEN_TOKEN')}`);
-    const response = await fetch(url);
+    console.log(`Fetching comments from: ${commentsUrl.replace(accessToken, 'ACCESS_TOKEN_HIDDEN')}`);
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Instagram API error:", response.status, errorText);
-      throw new Error(`Instagram API error: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    console.log(`Received ${data?.data?.length || 0} comments for media: ${mediaId}`);
-    
-    // Add detailed logging for the response structure
-    console.log("Comments API response structure:", JSON.stringify({
-      hasData: !!data.data,
-      dataType: data.data ? typeof data.data : null,
-      isArray: Array.isArray(data.data),
-      dataLength: data.data?.length,
-      hasPaging: !!data.paging,
-      pagingStructure: data.paging ? Object.keys(data.paging) : null
-    }));
-    
-    // Validate and transform the response if needed
-    if (!data.data && !data.error) {
-      // If Instagram returns an unexpected structure, try to normalize it
-      if (Array.isArray(data)) {
-        // If it's an array, wrap it in the expected object structure
-        console.log("Normalizing comments array response");
-        return res.status(200).json({
-          data: data,
-          paging: data.paging || {}
-        });
+    try {
+      const response = await fetch(commentsUrl);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Comments API error (${response.status}):`, errorText);
+        
+        // Don't throw error immediately, try other approaches
       } else {
-        console.warn("Unexpected response structure from Instagram API:", JSON.stringify(data).substring(0, 200));
-        // Return empty array with proper structure
-        return res.status(200).json({
-          data: [],
-          paging: {}
-        });
+        const data = await response.json();
+        console.log(`Direct approach: Received ${data?.data?.length || 0} comments for media: ${mediaId}`);
+        
+        if (data?.data?.length > 0) {
+          // If we got comments, return them
+          return res.status(200).json({
+            ...data,
+            _meta: {
+              expectedCount: expectedCommentsCount,
+              approach: "direct"
+            }
+          });
+        }
+        
+        // Store for potential fallback
+        commentsList = data?.data || [];
       }
+    } catch (directError) {
+      console.error("Direct comments fetch error:", directError.message);
     }
     
-    // If data.data is empty but we expect comments based on media metadata,
-    // provide diagnostic information about the mismatch
-    if (data.data && data.data.length === 0) {
-      console.log(`Media ${mediaId} expected to have comments but none returned from API.`);
-      // You could implement a fallback strategy here
+    // APPROACH 2: For business accounts, try the Instagram Graph API format
+    try {
+      // For business/creator accounts, the format might be slightly different
+      const businessUrl = `https://graph.facebook.com/v22.0/${mediaId}/comments?fields=${fields}&access_token=${accessToken}`;
+      
+      console.log(`Trying business API approach: ${businessUrl.replace(accessToken, 'ACCESS_TOKEN_HIDDEN')}`);
+      const businessResponse = await fetch(businessUrl);
+      
+      if (businessResponse.ok) {
+        const businessData = await businessResponse.json();
+        console.log(`Business approach: Received ${businessData?.data?.length || 0} comments`);
+        
+        if (businessData?.data?.length > 0) {
+          return res.status(200).json({
+            ...businessData,
+            _meta: {
+              expectedCount: expectedCommentsCount,
+              approach: "business"
+            }
+          });
+        }
+      }
+    } catch (businessError) {
+      console.error("Business API approach failed:", businessError.message);
     }
     
-    res.status(200).json(data);
+    // APPROACH 3: Fetch via user media edge as you implemented before
+    try {
+      const userMediaUrl = `https://graph.instagram.com/v22.0/${userId}/media?fields=id,comments{${fields}}&access_token=${accessToken}`;
+      
+      console.log(`Trying user media approach: ${userMediaUrl.replace(accessToken, 'ACCESS_TOKEN_HIDDEN')}`);
+      const userMediaResponse = await fetch(userMediaUrl);
+      
+      if (userMediaResponse.ok) {
+        const userMediaData = await userMediaResponse.json();
+        
+        // Find matching media
+        if (userMediaData?.data) {
+          const targetMedia = userMediaData.data.find(item => item.id === mediaId);
+          
+          if (targetMedia?.comments?.data?.length > 0) {
+            console.log(`User media approach: Found ${targetMedia.comments.data.length} comments`);
+            
+            return res.status(200).json({
+              data: targetMedia.comments.data,
+              paging: targetMedia.comments.paging || {},
+              _meta: {
+                expectedCount: expectedCommentsCount,
+                approach: "user_media"
+              }
+            });
+          }
+        }
+      }
+    } catch (userMediaError) {
+      console.error("User media approach failed:", userMediaError.message);
+    }
+    
+    // If we got this far, we couldn't find comments using any approach
+    // Return best data we have (might be empty array)
+    console.log(`Returning ${commentsList.length} comments from fallback (expected ${expectedCommentsCount})`);
+    
+    return res.status(200).json({
+      data: commentsList,
+      paging: {},
+      _meta: {
+        expectedCount: expectedCommentsCount,
+        approach: "fallback",
+        message: expectedCommentsCount > 0 ? 
+          "Comments count shows comments exist but they could not be retrieved" : 
+          "No comments found"
+      }
+    });
+    
   } catch (error) {
     console.error("Error fetching comments:", error);
     res.status(500).json({ error: "Failed to fetch comments", details: error.message });
