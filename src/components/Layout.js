@@ -104,19 +104,6 @@ export default function Layout({ children, title = "Instagram Integration App" }
                         transition={{ duration: 0.2 }}
                         className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
                       >
-                        <Link
-                          href="/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          View Profile
-                        </Link>
-                        <Link
-                          href="/feed"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Media Feed
-                        </Link>
-                        <div className="border-t border-gray-100 my-1"></div>
                         <a
                           href={`https://instagram.com/${session.user.username || session.user.name}`}
                           target="_blank"
