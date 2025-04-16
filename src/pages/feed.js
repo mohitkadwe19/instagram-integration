@@ -16,6 +16,41 @@ export default function FeedPage() {
   const [viewMode, setViewMode] = useState("grid");
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Add the missing getMediaTypeIcon function
+  const getMediaTypeIcon = (mediaType) => {
+    if (mediaType === "VIDEO") {
+      return (
+        <div className="absolute top-3 right-3 bg-black bg-opacity-50 rounded-full p-1">
+          <FaVideo className="text-white text-sm" />
+        </div>
+      );
+    } else if (mediaType === "CAROUSEL_ALBUM") {
+      return (
+        <div className="absolute top-3 right-3 bg-black bg-opacity-50 rounded-full p-1">
+          <FaImages className="text-white text-sm" />
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  // Missing function to open media details
+  const openMediaDetails = (media) => {
+    setSelectedMedia(media);
+  };
+  
+  // Missing function to close media details
+  const closeMediaDetails = () => {
+    setSelectedMedia(null);
+  };
+  
+  // Missing function to load more media
+  const loadMore = () => {
+    if (paginationCursor && !loadingMore) {
+      fetchMedia(paginationCursor);
+    }
+  };
+
   const fetchMedia = async (after = null) => {
     try {
       // Check if session exists before making API call
